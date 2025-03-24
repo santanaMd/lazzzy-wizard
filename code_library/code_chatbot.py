@@ -48,7 +48,7 @@ class CodeChatbot:
                 "Based on the following generated unit test code (which contains only pure Python code without markdown formatting), "
                 "provide a user-friendly message summarizing what the test does and whether it appears valid. "
                 "Output the summary as plain text without any code formatting.\n"
-                f"{generated_test}\nAnswer:"
+                f"{generated_test}\nAnswer: "
             )
             user_message = self.chat.ask(prompt_message)
             print(user_message)
