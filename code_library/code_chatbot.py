@@ -32,6 +32,15 @@ class CodeChatbot:
                 self.run_test(test_file)
             except Exception as e:
                 print(f"Error writing test file: {e}")
+            
+            prompt_message = (
+                "Based on the following generated unit test code (which contains only pure Python code without markdown formatting), "
+                "provide a user-friendly message summarizing what the test does and whether it appears valid. "
+                "Output the summary as plain text without any code formatting.\n"
+                f"{generated_test}\nAnswer: "
+            )
+            user_message = self.chat.ask(prompt_message)
+            print(user_message)
             return generated_test
 
         prompt = f"Context:\n{related_code}\n\nQuestion: {question}\nAnswer:"
@@ -48,3 +57,4 @@ class CodeChatbot:
         print(f"Running tests in {test_file}...")
         result = subprocess.run(["pytest", test_file], capture_output=True, text=True)
         print(result.stdout)
+
