@@ -1,0 +1,7 @@
+**/.env
+**/secrets/
+**/.venv
+**/chroma_index
+**/__pycache__/
+**/.pytest_cache
+**/generated_test.py
