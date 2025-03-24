@@ -11,8 +11,7 @@ class CodeChatbot:
     def chatbot_rag(self, question):
         """
         Processes the user's query, retrieves relevant code, and generates an answer.
-        If the question includes 'generate unit test', it generates a unit test as pure Python code,
-        saves it, runs it if valid, and then generates a summary message for the user based on the test code.
+        If the question includes 'generate unit test', it generates a unit test.
 
         Args:
             question (str): User query or command.
@@ -23,35 +22,16 @@ class CodeChatbot:
         related_code = self.indexer.retrieve_code(question)
         
         if "generate unit test" in question.lower():
-            prompt_test = (
-                "Generate a Python script with pure Python code only. Do not include any markdown formatting, "
-                "triple backticks, or any non-code text. The output should contain comprehensive unit tests for the following code. "
-                "Assume the code implements meaningful functionality and generate multiple test cases if applicable. "
-                "The output should start immediately with the Python code. "
-                "Here is the code to test:\n"
-                f"{related_code}\nAnswer:"
-            )
-            generated_test = self.chat.ask(prompt_test)
+            prompt = f"Generate a unit test for the following code:\n{related_code}\nAnswer:"
+            generated_test = self.chat.ask(prompt)
             test_file = "generated_test.py"
             try:
                 with open(test_file, "w", encoding="utf-8") as f:
                     f.write(generated_test)
                 print(f"Test generated and saved in {test_file}")
-                if "def test_" in generated_test:
-                    self.run_test(test_file)
-                else:
-                    print("Warning: Generated unit test does not appear to be valid Python code.")
+                self.run_test(test_file)
             except Exception as e:
                 print(f"Error writing test file: {e}")
-            
-            prompt_message = (
-                "Based on the following generated unit test code (which contains only pure Python code without markdown formatting), "
-                "provide a user-friendly message summarizing what the test does and whether it appears valid. "
-                "Output the summary as plain text without any code formatting.\n"
-                f"{generated_test}\nAnswer:"
-            )
-            user_message = self.chat.ask(prompt_message)
-            print(user_message)
             return generated_test
 
         prompt = f"Context:\n{related_code}\n\nQuestion: {question}\nAnswer:"
