@@ -11,8 +11,7 @@ class CodeChatbot:
     def chatbot_rag(self, question):
         """
         Processes the user's query, retrieves relevant code, and generates an answer.
-        If the question includes 'generate unit test', it generates a unit test as pure Python code,
-        saves it, runs it if valid, and then generates a summary message for the user based on the test code.
+        If the question includes 'generate unit test', it generates a unit test.
 
         Args:
             question (str): User query or command.
@@ -23,24 +22,14 @@ class CodeChatbot:
         related_code = self.indexer.retrieve_code(question)
         
         if "generate unit test" in question.lower():
-            prompt_test = (
-                "Generate a Python script with pure Python code only. Do not include any markdown formatting, "
-                "triple backticks, or any non-code text. The output should contain comprehensive unit tests for the following code. "
-                "Assume the code implements meaningful functionality and generate multiple test cases if applicable. "
-                "The output should start immediately with the Python code. "
-                "Here is the code to test:\n"
-                f"{related_code}\nAnswer:"
-            )
-            generated_test = self.chat.ask(prompt_test)
+            prompt = f"Generate a unit test for the following code:\n{related_code}\nAnswer:"
+            generated_test = self.chat.ask(prompt)
             test_file = "generated_test.py"
             try:
                 with open(test_file, "w", encoding="utf-8") as f:
                     f.write(generated_test)
                 print(f"Test generated and saved in {test_file}")
-                if "def test_" in generated_test:
-                    self.run_test(test_file)
-                else:
-                    print("Warning: Generated unit test does not appear to be valid Python code.")
+                self.run_test(test_file)
             except Exception as e:
                 print(f"Error writing test file: {e}")
             
