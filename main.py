@@ -5,12 +5,11 @@ def main():
     chatbot = CodeChatbot(indexer)
     
     repositories = [
-        "https://github.com/example/repo1.git",
-        "https://github.com/example/repo2.git"
+        "https://github.com/santanaMd/lazzzy-wizard.git"
     ]
     
     indexer.add_repositories(repositories)
-    question = "Generate unit test for the User class"
+    question = "Generate unit test for the code_library classes"
     response = chatbot.chatbot_rag(question)
     print(response)
 

@@ -3,7 +3,7 @@ import git
 import chromadb
 import hashlib
 import datetime
-from langchain.embeddings.openai import OpenAIEmbeddings
+from langchain_community.embeddings import OpenAIEmbeddings
 
 class CodeIndexer:
     """Indexes source code from repositories and generates embeddings for retrieval."""
@@ -19,7 +19,7 @@ class CodeIndexer:
 
         Args:
             repo_url (str): Repository URL.
-            repo_dir (str): Local path for the repository.
+            repo_dir (str): Local directory for the repository.
 
         Returns:
             git.Repo: Repository object.
@@ -33,7 +33,7 @@ class CodeIndexer:
 
     def get_repo_metadata(self, repo):
         """
-        Retrieves repository metadata, such as the branch and the current commit date.
+        Retrieves repository metadata such as the active branch and current commit date.
 
         Args:
             repo (git.Repo): Repository object.
@@ -43,7 +43,6 @@ class CodeIndexer:
         """
         branch = repo.active_branch.name
         commit_date = datetime.datetime.fromtimestamp(repo.head.commit.committed_date)
-        # We use the current commit date for creation and update (this can be improved)
         return {
             "branch": branch,
             "creation_date": str(commit_date),
@@ -52,14 +51,14 @@ class CodeIndexer:
 
     def load_code(self, repo_dir, extensions=[".py", ".js", ".java"]):
         """
-        Loads the content of files with the specified extensions.
+        Loads file contents with the specified extensions.
 
         Args:
-            repo_dir (str): Repository path.
+            repo_dir (str): Path to the repository.
             extensions (list, optional): List of file extensions. Defaults to [".py", ".js", ".java"].
 
         Returns:
-            dict: Dictionary with the file path as the key and content as the value.
+            dict: Dictionary with file paths as keys and file contents as values.
         """
         code = {}
         for dp, _, filenames in os.walk(repo_dir):
@@ -75,18 +74,18 @@ class CodeIndexer:
 
     def index_code(self, repo_url, repo_dir):
         """
-        Indexes the repository's source code, generating embeddings and storing them in ChromaDB.
+        Indexes the repository's source code by generating embeddings and storing them in ChromaDB.
 
         Args:
             repo_url (str): Repository URL.
-            repo_dir (str): Local path for the repository.
+            repo_dir (str): Local directory for the repository.
         """
         repo = self.process_repository(repo_url, repo_dir)
         repo_metadata = self.get_repo_metadata(repo)
         source_code = self.load_code(repo_dir)
 
         for file, content in source_code.items():
-            # Includes repo_url in the hash to avoid collisions between files from different repositories
+            # Include repo_url in the hash to avoid collisions between files from different repositories.
             doc_id = hashlib.md5((repo_url + file).encode()).hexdigest()
             embedding = self.embeddings_model.embed_documents([content])[0]
             metadata = {
@@ -106,7 +105,6 @@ class CodeIndexer:
         Args:
             repo_list (list): List of repository URLs.
         """
-        # Creates the 'repositories' directory if it doesn't exist
         if not os.path.exists("repositories"):
             os.makedirs("repositories")
         for repo_url in repo_list:
@@ -122,12 +120,12 @@ class CodeIndexer:
             top_k (int, optional): Number of results. Defaults to 3.
 
         Returns:
-            str: String containing code snippets and their respective metadata.
+            str: String containing code snippets and their metadata.
         """
         query_vector = self.embeddings_model.embed_documents([question])[0]
         results = self.collection.query(query_embeddings=[query_vector], n_results=top_k)
         
-        # Handles the case where results are in a list of lists format
+        # Handle the case where results are in a list-of-lists format
         documents = results["documents"][0] if results["documents"] and isinstance(results["documents"][0], list) else results["documents"]
         metadatas = results["metadatas"][0] if results["metadatas"] and isinstance(results["metadatas"][0], list) else results["metadatas"]
 
